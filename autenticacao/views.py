@@ -12,7 +12,7 @@ import os
 def cadastro(request):
     if request.method == 'GET':
         if request.user.is_authenticated:
-            return redirect('/')
+            return redirect('/pacientes/')
         
         return render(request, 'cadastro.html')
 
@@ -56,7 +56,7 @@ def valida_cadastro(request):
 def logar(request):
     if request.method == 'GET':
         if request.user.is_authenticated:
-            return redirect('/')
+            return redirect('/pacientes/')
         
         return render(request, 'login.html')
     
@@ -73,7 +73,7 @@ def valida_login(request):
             return redirect('/auth/login/')
         
         auth.login(request, usuario)
-        return redirect('/')
+        return redirect('/pacientes/')
 
 
 def ativar_conta(request, token):

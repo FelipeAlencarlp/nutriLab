@@ -9,5 +9,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', lambda request: redirect('/auth/login/')),
     path('auth/', include('autenticacao.urls')),
+    path('', include('plataforma.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
