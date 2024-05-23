@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from .models import Pacientes, DadosPaciente
+from .models import Pacientes, DadosPaciente, Refeicao, Opcao
 from datetime import datetime
 
 
@@ -91,11 +91,11 @@ def valida_dados(request, paciente_id):
 
         if (len(peso.strip()) == 0) or (len(altura.strip()) == 0) or (len(gordura.strip()) == 0) or (len(musculo.strip()) == 0) or (len(hdl.strip()) == 0) or (len(ldl.strip()) == 0) or (len(colesterol_total.strip()) == 0) or (len(triglicerídios.strip()) == 0):
             messages.add_message(request, messages.ERROR, 'Preencha todos os campos')
-            return redirect('/dados_paciente/')
+            return redirect(f'/dados_paciente/{paciente_id}')
         
         if not peso.isnumeric() or not altura.isnumeric() or not gordura.isnumeric() or not musculo.isnumeric() or not hdl.isnumeric() or not ldl.isnumeric() or not colesterol_total.isnumeric() or not triglicerídios.isnumeric():
             messages.add_message(request, messages.ERROR, 'Os campos precisam ser números')
-            return redirect('/dados_paciente/')
+            return redirect(f'/dados_paciente/{paciente_id}')
 
         try:
             cadastrar_paciente = DadosPaciente(
@@ -113,11 +113,11 @@ def valida_dados(request, paciente_id):
             cadastrar_paciente.save()
 
             messages.add_message(request, messages.SUCCESS, 'Dados do paciente cadastrados com sucesso!')
-            return redirect('/dados_paciente/')
+            return redirect(f'/dados_paciente/{paciente_id}')
         
         except:
             messages.add_message(request, messages.ERROR, 'Erro interno do sistema! Contate um administrador.')
-            return redirect('/dados_paciente/')
+            return redirect(f'/dados_paciente/{paciente_id}')
 
 
 # API para o gráfico
@@ -133,3 +133,79 @@ def grafico_peso(request, paciente_id):
             'labels': labels}
     
     return JsonResponse(data)
+
+
+@login_required(login_url='/auth/login/')
+def plano_alimentar_listar(request):
+    if request.method == 'GET':
+        pacientes = Pacientes.objects.filter(nutri=request.user)
+        return render(request, 'plano_alimentar_listar.html', {'pacientes': pacientes})
+
+
+@login_required(login_url='/auth/login/')
+def plano_alimentar(request, paciente_id):
+    if request.method == 'GET':
+        paciente = get_object_or_404(Pacientes, id=paciente_id)
+        refeicao = Refeicao.objects.filter(paciente=paciente).order_by('horario')
+        opcao = Opcao.objects.all()
+
+        if not paciente.nutri == request.user:
+            messages.add_message(request, messages.ERROR, 'Esse paciente não é seu')
+            return redirect('/plano_alimentar_listar/')
+
+        return render(request, 'plano_alimentar.html', {'paciente': paciente,
+                                                        'refeicao': refeicao,
+                                                        'opcao': opcao})
+    
+
+@login_required(login_url='/auth/login/')
+def refeicao(request, paciente_id):
+    paciente = get_object_or_404(Pacientes, id=paciente_id)
+
+    if not paciente.nutri == request.user:
+        messages.add_message(request, messages.ERROR, 'Esse paciente não é seu')
+        return redirect('/dados_paciente/')
+
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo')
+        horario = request.POST.get('horario')
+        carboidratos = request.POST.get('carboidratos')
+        proteinas = request.POST.get('proteinas')
+        gorduras = request.POST.get('gorduras')
+
+        try:
+            refeicao = Refeicao(paciente=paciente,
+                                titulo=titulo,
+                                horario=horario,
+                                carboidratos=carboidratos,
+                                proteinas=proteinas,
+                                gorduras=gorduras)
+            refeicao.save()
+
+            messages.add_message(request, messages.SUCCESS, 'Refeição cadastrada')
+            return redirect(f'/plano_alimentar/{paciente_id}')
+        
+        except:
+            messages.add_message(request, messages.ERROR, 'Erro interno do sistema! Contate um administrador.')
+            return redirect(f'/plano_alimentar/{paciente_id}')
+
+
+@login_required(login_url='/auth/login/')
+def opcao(request, paciente_id):
+    if request.method == 'POST':
+        id_refeicao = request.POST.get('refeicao')
+        imagem = request.FILES.get('imagem')
+        descricao = request.POST.get("descricao")
+
+        try:
+            cadastrar_opcao = Opcao(refeicao_id=id_refeicao,
+                                    imagem=imagem,
+                                    descricao=descricao)
+            cadastrar_opcao.save()
+
+            messages.add_message(request, messages.SUCCESS, 'Opção cadastrada')
+            return redirect(f'/plano_alimentar/{paciente_id}')
+
+        except:
+            messages.add_message(request, messages.ERROR, 'Erro interno do sistema! Contate um administrador')
+            return redirect(f'/plano_alimentar/{paciente_id}')

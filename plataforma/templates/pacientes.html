@@ -18,10 +18,9 @@
     <br>
     <br>
     <div  class="row">
-
         {% for paciente in pacientes %}
             <div class="col-md-4">
-                <a href="{% url 'dados_paciente' paciente.id %}" class="link-hover">
+                <p class="link-hover">
                     <div class="card-paciente">
                         <div class="foto-perfil">
 
@@ -38,7 +37,7 @@
                         <p class="dados">{{ paciente.idade }} anos</p>
                         <p class="dados">{{ paciente.email }}</p>
                     </div>
-                </a>
+                </p>
             </div>
         {% endfor %}
         

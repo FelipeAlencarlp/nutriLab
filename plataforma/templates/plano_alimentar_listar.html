@@ -17,7 +17,7 @@
     <div  class="row">
         {% for paciente in pacientes%}
             <div class="col-md-4">
-                <a href="{% url 'dados_paciente' paciente.id %}" class="link-hover">
+                <a href="{% url 'plano_alimentar' paciente.id %}" class="link-hover">
                     <div class="card-paciente">
                         <div class="foto-perfil">
                            
@@ -26,7 +26,7 @@
                             {% else %}
                                 <img src="{% static 'plataforma/img/perfil1.png' %}">
                             {% endif %}
-
+                            
                         </div>
                         <br>
                         <p class="dados">{{paciente.nome}}</p>
